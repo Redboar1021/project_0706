@@ -17,7 +17,8 @@ import sys
 import torch
 from random import randint
 from utils.loss_utils import l1_loss, ssim
-from gaussian_renderer import render, network_gui, render_affine, render_pca, render_silhouette, render_parents, render_silhouette_parents
+from gaussian_renderer import render, network_gui, render_affine, render_pca, render_silhouette
+# from gaussian_renderer import render, network_gui, render_affine, render_pca, render_silhouette, render_parents, render_silhouette_parents
 import sys
 from scene import Scene, GaussianModel
 from utils.general_utils import safe_state
@@ -461,7 +462,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
     edge_idx_knn  = None       # (N,k) の近傍インデックス
     x_snap    = None       # spring 基準点群
 
-    first_iter = -5000
+    first_iter = -100
     tb_writer = prepare_output_and_logger(dataset)
     gaussians = GaussianModel(dataset.sh_degree)
     scene = Scene(dataset, gaussians)
@@ -523,7 +524,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
 
     # --- MeshNeighborhoodLoss ---------------------
     loss_helper = MeshNeighborhoodLoss(
-        verts_init = gaussians.get_xyz,           # 初期 6890×3
+        verts_init = gaussians.get_xyz[:6890],           # 初期 6890×3
         smpl_pkl   = '/root/development/project4010/VAE/models/SMPL_NEUTRAL.pkl',
         device     = device
     )
@@ -631,7 +632,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
                 # ガウシアンにアフィン変換かける
                 gaussians.apply_affine(pre_affine)
                 #MeshNeighborhoodLossを更新
-                loss_helper.reset_rest_pose(gaussians.get_xyz.clone().detach())
+                loss_helper.reset_rest_pose(gaussians.get_xyz[:6890].clone().detach())
 
                 for p in pre_affine.parameters():
                     p.requires_grad_(False)
@@ -685,6 +686,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
             with torch.no_grad():
                 gaussians._rotation.data[:6890].copy_(quat)
                 gaussians._scaling.data[:6890].copy_(sigma)   # (N,3)
+                torch.cuda.synchronize()
 
 
         gaussians.update_learning_rate(iteration)
@@ -714,13 +716,16 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
             render_pkg = render(viewpoint_cam, gaussians, pipe, bg)
 
         image, viewspace_point_tensor, visibility_filter, radii = render_pkg["render"], render_pkg["viewspace_points"], render_pkg["visibility_filter"], render_pkg["radii"]
-
+        torch.cuda.synchronize()
         render_white = render_silhouette(viewpoint_cam, gaussians, pipe, bg)
         image_white, viewspace_point_tensor_white, visibility_filter_white, radii_white = render_white["render"], render_white["viewspace_points"], render_white["visibility_filter"], render_white["radii"]
+        torch.cuda.synchronize()
         # render_par = render_parents(viewpoint_cam, gaussians, pipe, bg)
         # image_parents, viewspace_point_tensor_parents, visibility_filter_parents, radii_parents = render_par["render"], render_par["viewspace_points"], render_par["visibility_filter"], render_par["radii"]
+        torch.cuda.synchronize()
         # render_par_white = render_silhouette_parents(viewpoint_cam, gaussians, pipe, bg)
         # image_parents_white, viewspace_point_tensor_parents_white, visibility_filter_parents_white, radii_parents_white = render_par_white["render"], render_par_white["viewspace_points"], render_par_white["visibility_filter"], render_par_white["radii"]
+        torch.cuda.synchronize()
         #ガウシアンの座標を取得
         means3D = gaussians.get_xyz
         #ガウシアンの透明度を取得
@@ -787,7 +792,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         
         Ll1 = l1_loss(image, gt_image)
         li_white = l1_loss(image_white, white_gt_image)
-        # li_white_parents = l1_loss(image_parents, gt_image)  # 親の画像とのL1損失
+        # li_white_parents = l1_loss(image_parents_white, white_gt_image)  # 親の画像とのL1損失
         if iteration % 100 == 0:
             white_out_dir = Path("/root/development/project4010/gaussian-splatting/output_temp")
             white_out_dir.mkdir(parents=True, exist_ok=True)
@@ -815,7 +820,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         # t = toc(t, "Training iteration losses")
         # loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + loss4
         # loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + loss2 + loss3 + loss4 + lap + spr + li_white * 0.1
-        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + loss2 + loss3  + loss4 + loss_spring
+        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + loss2 + loss3  + loss4 + loss_spring + li_white
         # loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + loss2 + loss3 + loss4 + spr + li_white + nor + loss_arap
         loss.backward()
         # t = toc(t, "Training iteration backward")
