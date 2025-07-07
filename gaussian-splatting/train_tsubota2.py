@@ -717,8 +717,8 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
 
         render_white = render_silhouette(viewpoint_cam, gaussians, pipe, bg)
         image_white, viewspace_point_tensor_white, visibility_filter_white, radii_white = render_white["render"], render_white["viewspace_points"], render_white["visibility_filter"], render_white["radii"]
-        render_par = render_parents(viewpoint_cam, gaussians, pipe, bg)
-        image_parents, viewspace_point_tensor_parents, visibility_filter_parents, radii_parents = render_par["render"], render_par["viewspace_points"], render_par["visibility_filter"], render_par["radii"]
+        # render_par = render_parents(viewpoint_cam, gaussians, pipe, bg)
+        # image_parents, viewspace_point_tensor_parents, visibility_filter_parents, radii_parents = render_par["render"], render_par["viewspace_points"], render_par["visibility_filter"], render_par["radii"]
         # render_par_white = render_silhouette_parents(viewpoint_cam, gaussians, pipe, bg)
         # image_parents_white, viewspace_point_tensor_parents_white, visibility_filter_parents_white, radii_parents_white = render_par_white["render"], render_par_white["viewspace_points"], render_par_white["visibility_filter"], render_par_white["radii"]
         #ガウシアンの座標を取得
@@ -787,7 +787,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         
         Ll1 = l1_loss(image, gt_image)
         li_white = l1_loss(image_white, white_gt_image)
-        li_white_parents = l1_loss(image_parents, gt_image)  # 親の画像とのL1損失
+        # li_white_parents = l1_loss(image_parents, gt_image)  # 親の画像とのL1損失
         if iteration % 100 == 0:
             white_out_dir = Path("/root/development/project4010/gaussian-splatting/output_temp")
             white_out_dir.mkdir(parents=True, exist_ok=True)
@@ -815,7 +815,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, checkpoi
         # t = toc(t, "Training iteration losses")
         # loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + loss4
         # loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + loss2 + loss3 + loss4 + lap + spr + li_white * 0.1
-        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + loss2 + loss3  + li_white_parents + loss4 + loss_spring
+        loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + loss2 + loss3  + loss4 + loss_spring
         # loss = (1.0 - opt.lambda_dssim) * Ll1 + opt.lambda_dssim * (1.0 - ssim(image, gt_image)) + loss2 + loss3 + loss4 + spr + li_white + nor + loss_arap
         loss.backward()
         # t = toc(t, "Training iteration backward")
