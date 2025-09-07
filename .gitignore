@@ -1,0 +1,85 @@
+# 画像ファイル
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.tiff
+*.tga
+*.svg
+
+# 動画ファイル
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mkv
+
+# 音声ファイル
+*.mp3
+*.wav
+*.flac
+*.aac
+*.ogg
+
+# モデルファイル（大容量）
+*.pth
+*.pkl
+*.h5
+*.onnx
+*.bin
+
+# データファイル
+*.xyz
+*.obj
+*.ply
+*.stl
+
+# 出力ディレクトリ
+output/
+output_temp/
+temp/
+__pycache__/
+
+# 環境関連
+myenv/
+.venv/
+venv/
+env/
+.conda/
+
+# エディタ関連
+.vscode/
+.idea/
+
+# システムファイル
+.DS_Store
+Thumbs.db
+.directory
+
+# ログファイル
+*.log
+
+# 一時ファイル
+*.tmp
+*.temp
+~*
+
+# Jupyter Notebook関連
+.ipynb_checkpoints/
+
+# C++コンパイル関連
+*.o
+*.so
+*.a
+*.exe
+
+# Python関連
+*.pyc
+*.pyo
+*.pyd
+
+# 特定の大きなディレクトリ
+MPI-FAUST/
+C:temp4/

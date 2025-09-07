@@ -1,0 +1,4 @@
+# ninja log v5
+1	11512	1744261059330616430	/root/development/project4010/gaussian-splatting/submodules/simple-knn/build/temp.linux-x86_64-cpython-312/simple_knn.o	ed1bb010575a64de
+1	26066	1744261073869465917	/root/development/project4010/gaussian-splatting/submodules/simple-knn/build/temp.linux-x86_64-cpython-312/ext.o	a7aa2c53cb8f4a49
+1	56694	1744261104505180909	/root/development/project4010/gaussian-splatting/submodules/simple-knn/build/temp.linux-x86_64-cpython-312/spatial.o	1bdca6122e0c186c
